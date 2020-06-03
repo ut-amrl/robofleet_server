@@ -1,0 +1,21 @@
+{
+  "name": "robofleet_server",
+  "version": "1.0.0",
+  "description": "RoboFleet 2.0 Server",
+  "main": "dist/index.js",
+  "repository": "https://github.com/ut-amrl/robofleet_server",
+  "author": "Logan Zartman <logan.zartman@utexas.edu>",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "serve": "yarn build; node dist/index.js"
+  },
+  "dependencies": {
+    "ws": "^7.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^14.0.6",
+    "@types/ws": "^7.2.4",
+    "typescript": "^3.9.3"
+  }
+}
