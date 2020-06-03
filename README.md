@@ -5,8 +5,10 @@
 ## Dependencies
 
 * Node.js
+* [yarn](https://classic.yarnpkg.com/en/docs/install)
 
 ## Building
 
-* `npm run build`
-* `npm run serve` to start
+* `yarn install`
+* `yarn build` to build
+* `yarn serve` to start
