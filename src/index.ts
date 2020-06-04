@@ -11,7 +11,7 @@ wss.on("connection", ws => {
     ws.on("message", data => {
         console.log(data);
         Array.from(wss.clients.keys())
-            .filter(client => client.readyState === WebSocket.OPEN)
+            .filter(client => client !== ws && client.readyState === WebSocket.OPEN)
             .forEach(client => {
                 client.send(data);
                 console.log("broadcasted");
