@@ -11,4 +11,4 @@
 
 * `yarn install`
 * `yarn build` to build
-* `yarn serve` to start
+* `yarn start` to start
