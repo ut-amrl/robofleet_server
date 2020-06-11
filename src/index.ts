@@ -9,12 +9,13 @@ const wss = new WebSocket.Server({
 wss.on("connection", ws => {
     console.log("new connection");
     ws.on("message", data => {
-        console.log(data);
-        Array.from(wss.clients.keys())
-            .filter(client => client !== ws && client.readyState === WebSocket.OPEN)
-            .forEach(client => {
-                client.send(data);
-                console.log("broadcasted");
-            });
+        for (let client of wss.clients) {
+            if (client.readyState !== WebSocket.OPEN)
+                continue;
+            if (client === ws)
+                continue;
+            client.send(data);
+            console.log("broadcasted");
+        }
     });
 });
