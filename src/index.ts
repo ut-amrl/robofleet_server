@@ -1,11 +1,10 @@
 import WebSocket from "ws";
+import config from "./config";
 import { flatbuffers } from "flatbuffers";
 import { fb } from "./schema_generated";
 
-const ws_port = 8080;
-
 const wss = new WebSocket.Server({
-    port: ws_port,
+    port: config.serverPort
 });
 
 wss.on("connection", ws => {
