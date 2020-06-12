@@ -1,4 +1,6 @@
 import WebSocket from "ws";
+import { flatbuffers } from "flatbuffers";
+import { fb } from "./schema_generated";
 
 const ws_port = 8080;
 
