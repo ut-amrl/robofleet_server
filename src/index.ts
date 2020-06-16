@@ -1,15 +1,33 @@
 import { flatbuffers } from "flatbuffers";
-import { IncomingMessage } from "http";
+import { IncomingMessage, Server } from "http";
 import WebSocket from "ws";
 import { makeAuthorizer } from "./access";
 import config from "./config";
 import { fb } from "./schema_generated";
+import https from "https";
+import fs from "fs";
 
 const authorize = makeAuthorizer(config);
 
-const wss = new WebSocket.Server({
-  port: config.serverPort
-});
+let httpsServer: https.Server;
+let wss: WebSocket.Server;
+if (config.useSecure) {
+  // https://github.com/websockets/ws#external-https-server
+  httpsServer = new https.Server({
+    cert: fs.readFileSync(config.certPath),
+    key: fs.readFileSync(config.keyPath),
+  });
+
+  wss = new WebSocket.Server({
+    server: httpsServer
+  });
+
+  httpsServer.listen(config.serverPort);  
+} else {
+  wss = new WebSocket.Server({
+    port: config.serverPort
+  });
+}
 
 const wsIpMap = new Map<WebSocket, string>();
 

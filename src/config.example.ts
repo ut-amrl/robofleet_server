@@ -2,6 +2,9 @@
 
 export default {
     serverPort: 8080,
+    useSecure: false,
+    certPath: "example.pem",
+    keyPath: "example.key",
     authorizedClients: [
         // localhost
         {ip: "127.0.0.1"},
