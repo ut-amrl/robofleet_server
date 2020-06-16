@@ -12,6 +12,12 @@ export function makeAuthorizer(config: AuthConfig) {
   return function authorize({ip, token, topic, op}: {ip?: string, token?: string, topic: string, op: Op}) {
     // TODO: handle topic
     // TODO: handle operation
+    
+    // allow unauthorized clients to receive status messages
+    if (op === "receive" && /^.*\/status$/.test(topic)) {
+      return true;
+    }
+    
     for (let authorizedClient of config.authorizedClients) {
       if (typeof ip !== "undefined") {
         const ipAddr = ip6addr.parse(ip);

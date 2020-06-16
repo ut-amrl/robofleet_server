@@ -46,3 +46,17 @@ test("Authorizes receive status for unauthorized client", () => {
     op: "receive"
   })).toBe(true);
 });
+
+test("Authorizes send status for authorized client", () => {
+  const authorize = makeAuthorizer({
+    authorizedClients: [
+      {ip: "1.2.3.4"}
+    ]
+  });
+  
+  expect(authorize({
+    ip: "1.2.3.4",
+    topic: "/x/y/status",
+    op: "send"
+  })).toBe(true);
+});
