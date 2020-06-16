@@ -1,10 +1,11 @@
 import { flatbuffers } from "flatbuffers";
 import { IncomingMessage } from "http";
 import WebSocket from "ws";
-import authorize from "./access";
+import { makeAuthorizer } from "./access";
 import config from "./config";
 import { fb } from "./schema_generated";
 
+const authorize = makeAuthorizer(config);
 
 const wss = new WebSocket.Server({
   port: config.serverPort
