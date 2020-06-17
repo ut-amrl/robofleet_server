@@ -1,5 +1,6 @@
 import { IncomingMessage } from "http";
 import WebSocket from "ws";
+import { flatbuffers } from "flatbuffers"; // do not remove; needed by generated code
 import { fb } from "./schema_generated";
 
 // get IP from IncomingMessage, with support for proxied requests
