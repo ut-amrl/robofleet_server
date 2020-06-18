@@ -6,9 +6,10 @@ export interface AuthConfig {
   permissions: Array<{
     ip?: string,
     ipRange?: [string, string],
-    allow: Array<Op>
-  }>
-};
+    allow: Array<Op>,
+  }>,
+  [other: string]: any
+}
 
 export function makeAuthorizer(config: AuthConfig) {
   return function authorize({ip, token, topic, op}: {ip?: string, token?: string, topic: string, op: Op}) {
