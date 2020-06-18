@@ -5,9 +5,10 @@ export default {
     useSecure: false,
     certPath: "example.pem",
     keyPath: "example.key",
-    authorizedClients: [
+    permissions: [
         // localhost
-        {ip: "127.0.0.1"},
-        {ip: "::1"},
+        {ip: "127.0.0.1", allow: ["send", "receive"]},
+        {ip: "::1", allow: ["send", "receive"]},
+        // {ipRange: ["0.0.0.0", "255.255.255.255"], allow: ["receive"]},
     ],
 };

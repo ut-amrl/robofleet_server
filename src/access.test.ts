@@ -2,7 +2,7 @@ import { makeAuthorizer } from "./access";
 
 test("Does not authorize receive /x/y/topic for unauthorized client", () => {
   const authorize = makeAuthorizer({
-    authorizedClients: []
+    permissions: []
   });
   expect(authorize({
     ip: "1.2.3.4",
@@ -13,7 +13,7 @@ test("Does not authorize receive /x/y/topic for unauthorized client", () => {
 
 test("Does not authorize send status for unauthorized client", () => {
   const authorize = makeAuthorizer({
-    authorizedClients: []
+    permissions: []
   });
   
   expect(authorize({
@@ -31,7 +31,7 @@ test("Does not authorize send status for unauthorized client", () => {
 
 test("Authorizes receive status for unauthorized client", () => {
   const authorize = makeAuthorizer({
-    authorizedClients: []
+    permissions: []
   });
   
   expect(authorize({
@@ -47,16 +47,59 @@ test("Authorizes receive status for unauthorized client", () => {
   })).toBe(true);
 });
 
-test("Authorizes send status for authorized client", () => {
+test("Authorizes receive topic for authorized client", () => {
   const authorize = makeAuthorizer({
-    authorizedClients: [
-      {ip: "1.2.3.4"}
+    permissions: [
+      {
+        ip: "1.2.3.4",
+        allow: ["receive"]
+      }
     ]
   });
   
   expect(authorize({
     ip: "1.2.3.4",
-    topic: "/x/y/status",
+    topic: "/x/y/topic",
     op: "send"
+  })).toBe(false);
+
+  expect(authorize({
+    ip: "1.2.3.4",
+    topic: "/x/y/topic",
+    op: "receive"
   })).toBe(true);
+});
+
+test("Authorizes send topic for client in authorized IP range", () => {
+  const authorize = makeAuthorizer({
+    permissions: [
+      {
+        ipRange: ["1.0.0.0", "1.2.0.0"],
+        allow: ["receive"]
+      }
+    ]
+  });
+
+  expect(authorize({
+    ip: "1.1.0.0",
+    topic: "/x/y/topic",
+    op: "receive"
+  })).toBe(true);
+});
+
+test("Does not authorize send topic for client outside authorized IP range", () => {
+  const authorize = makeAuthorizer({
+    permissions: [
+      {
+        ipRange: ["1.0.0.0", "1.2.0.0"],
+        allow: ["receive"]
+      }
+    ]
+  });
+
+  expect(authorize({
+    ip: "1.2.0.1",
+    topic: "/x/y/topic",
+    op: "receive"
+  })).toBe(false);
 });
