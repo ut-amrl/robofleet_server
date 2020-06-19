@@ -6,6 +6,7 @@ import { getIp, getRobofleetMetadata } from "./util";
 const authorize = makeAuthorizer(config);
 
 const wsIpMap = new Map<WebSocket, string>();
+const metadataErrors = new Set<string>();
 
 export function setupWebsocketApp(wss: WebSocket.Server) {
   wss.on("connection", (ws, req) => {
@@ -23,8 +24,13 @@ export function setupWebsocketApp(wss: WebSocket.Server) {
 
     ws.on("message", (data) => {
       const topic = getRobofleetMetadata(data)?.topic() ?? null;
-      if (topic === null)
+      if (topic === null) {
+        if (!metadataErrors.has(ip)) {
+          console.error(`WARNING: ${ip} is sending messages with no metadata`);
+          metadataErrors.add(ip);
+        }
         return;
+      }
       
       if (authorize({ip, topic, op: "send"})) {
         for (let client of wss.clients) {
@@ -41,7 +47,7 @@ export function setupWebsocketApp(wss: WebSocket.Server) {
 
           if (authorize({ip: clientIp, topic, op: "receive"})) {
             client.send(data);
-            console.log("broadcasted");
+            console.log(`broadcasted ${topic} from ${ip} to ${clientIp}`);
           }
         }
       }
