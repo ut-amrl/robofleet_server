@@ -16,7 +16,11 @@ export function makeAuthorizer(config: AuthConfig) {
     // TODO: handle topic
     
     // allow unauthorized clients to receive status messages
-    if (op === "receive" && /^.*\/status$/.test(topic)) {
+    if (op === "receive" && topic.endsWith("/status")) {
+      return true;
+    }
+    // allow unauthorized clients to send messages to /subscriptions
+    if (op === "send" && topic === "/subscriptions") {
       return true;
     }
 

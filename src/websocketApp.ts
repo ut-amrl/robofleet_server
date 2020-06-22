@@ -1,12 +1,13 @@
 import WebSocket from "ws";
 import { makeAuthorizer } from "./access";
 import config from "./config";
-import { getIp, getRobofleetMetadata } from "./util";
+import { getIp, getRobofleetMetadata, getByteBuffer } from "./util";
+import { SubscriptionManager } from "./subscriptions";
 
 const authorize = makeAuthorizer(config);
+const subscriptions = new SubscriptionManager();
 
 const wsIpMap = new Map<WebSocket, string>();
-const metadataErrors = new Set<string>();
 
 export function setupWebsocketApp(wss: WebSocket.Server) {
   wss.on("connection", (ws, req) => {
@@ -23,16 +24,25 @@ export function setupWebsocketApp(wss: WebSocket.Server) {
     });
 
     ws.on("message", (data) => {
-      const topic = getRobofleetMetadata(data)?.topic() ?? null;
+      const buf = getByteBuffer(data);
+      if (buf === null) {
+        return; // received text message; ignore
+      }
+
+      // extract topic from message metadata for authorization
+      const topic = getRobofleetMetadata(buf)?.topic() ?? null;
       if (topic === null) {
-        if (!metadataErrors.has(ip)) {
-          console.error(`WARNING: ${ip} is sending messages with no metadata`);
-          metadataErrors.add(ip);
-        }
+        console.error(`WARNING: ${ip} is sending messages with no metadata`);
         return;
       }
       
       if (authorize({ip, topic, op: "send"})) {
+        // handle subscription messages
+        if (subscriptions.handleMessageBuffer(ws, buf)) {
+          return;
+        }
+
+        // broadcast any other messages
         for (let client of wss.clients) {
           if (client === ws)
             continue;
@@ -41,13 +51,14 @@ export function setupWebsocketApp(wss: WebSocket.Server) {
           
           const clientIp = wsIpMap.get(client);
           if (clientIp === undefined) {
-            console.error("Client IP not available; wsIpMap may be broken.");
-            continue;
+            throw new Error("No IP recorded for client; wsIpMap in invalid state.");
           }
-
+          
           if (authorize({ip: clientIp, topic, op: "receive"})) {
-            client.send(data);
-            console.log(`broadcasted ${topic} from ${ip} to ${clientIp}`);
+            if (subscriptions.isSubscribed(client, topic)) {
+              client.send(data);
+              console.log(`broadcasted ${topic} from ${ip} to ${clientIp}`);
+            }
           }
         }
       }

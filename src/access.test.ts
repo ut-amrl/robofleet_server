@@ -47,6 +47,42 @@ test("Authorizes receive status for unauthorized client", () => {
   })).toBe(true);
 });
 
+test("Does not authorize send .*/subscriptions for unauthorized client", () => {
+  const authorize = makeAuthorizer({
+    permissions: []
+  });
+  
+  expect(authorize({
+    ip: "1.2.3.4",
+    topic: "/my/robot/subscriptions",
+    op: "send"
+  })).toBe(false);
+
+  expect(authorize({
+    ip: "1.2.3.4",
+    topic: "/my/robot/subscriptions",
+    op: "receive"
+  })).toBe(false);
+});
+
+test("Authorizes send /subscriptions for unauthorized client", () => {
+  const authorize = makeAuthorizer({
+    permissions: []
+  });
+  
+  expect(authorize({
+    ip: "1.2.3.4",
+    topic: "/subscriptions",
+    op: "send"
+  })).toBe(true);
+
+  expect(authorize({
+    ip: "1.2.3.4",
+    topic: "/subscriptions",
+    op: "receive"
+  })).toBe(false);
+});
+
 test("Authorizes receive topic for authorized client", () => {
   const authorize = makeAuthorizer({
     permissions: [

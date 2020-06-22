@@ -15,11 +15,17 @@ export function getIp(req: IncomingMessage) {
   return forwardedFor.split(/\s*,\s*/)[0];
 }
 
-export function getRobofleetMetadata(data: WebSocket.Data) {
-  if (!(data instanceof Buffer)) {
-    return null;
+export function getByteBuffer(data: WebSocket.Data) {
+  if (data instanceof Buffer) {
+    return new flatbuffers.ByteBuffer(data);
   }
-  const buf = new flatbuffers.ByteBuffer(data);
+  if (data instanceof ArrayBuffer) {
+    return new flatbuffers.ByteBuffer(new Uint8Array(data));
+  }
+  return null;
+}
+
+export function getRobofleetMetadata(buf: flatbuffers.ByteBuffer) {
   const msg = fb.MsgWithMetadata.getRootAsMsgWithMetadata(buf);
   return msg._metadata();
 }
