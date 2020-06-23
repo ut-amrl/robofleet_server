@@ -8,8 +8,8 @@
   "private": true,
   "scripts": {
     "build": "tsc",
-    "deploy": "yarn build; mkdir -p deploy && cp -R node_modules dist deploy",
-    "start": "yarn build; node dist/index.js",
+    "deploy": "yarn build && mkdir -p deploy && cp -R node_modules dist deploy",
+    "start": "yarn build && node dist/index.js",
     "test": "jest"
   },
   "dependencies": {
