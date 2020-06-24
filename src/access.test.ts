@@ -139,3 +139,75 @@ test("Does not authorize send topic for client outside authorized IP range", () 
     op: "receive"
   })).toBe(false);
 });
+
+test("Authorizes a client to receive by email address", () => {
+  const authorize = makeAuthorizer({
+    permissions: [
+      {
+        email: "test@example.org",
+        allow: ["receive"]
+      }
+    ]
+  });
+
+  expect(authorize({
+    ip: "1.2.3.4",
+    email: "test@example.org",
+    topic: "/x/y/topic",
+    op: "receive"
+  })).toBe(true);
+
+  expect(authorize({
+    ip: "1.2.3.4",
+    email: "test@example.org",
+    topic: "/x/y/topic",
+    op: "send"
+  })).toBe(false);
+});
+
+test("Does not authorizes an unauthorized client to receive by email address", () => {
+  const authorize = makeAuthorizer({
+    permissions: [
+      {
+        email: "test@example.org",
+        allow: ["receive"]
+      }
+    ]
+  });
+
+  expect(authorize({
+    ip: "1.2.3.4",
+    email: "test@example.com",
+    topic: "/x/y/topic",
+    op: "receive"
+  })).toBe(false);
+});
+
+test("Authorizes multiple kinds of identities", () => {
+  const authorize = makeAuthorizer({
+    permissions: [
+      {
+        email: "test@example.org",
+        allow: ["receive"]
+      },
+      {
+        ip: "1.2.3.4",
+        allow: ["receive"]
+      }
+    ]
+  });
+
+  expect(authorize({
+    ip: "2.3.4.5",
+    email: "test@example.org",
+    topic: "/x/y/topic",
+    op: "receive"
+  })).toBe(true);
+
+  expect(authorize({
+    ip: "1.2.3.4",
+    email: "nope@example.org",
+    topic: "/x/y/topic",
+    op: "receive"
+  })).toBe(true);
+});

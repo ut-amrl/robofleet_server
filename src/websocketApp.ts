@@ -61,6 +61,7 @@ function handleBinaryMessage(wss: WebSocket.Server, sender: WebSocket, data: Web
   if (!ip) {
     throw new Error("No IP recoded for sender; wsIpMap in invalid state.");
   }
+  const senderEmail = wsEmailMap.get(sender);
 
   // extract topic from message metadata for authorization
   const topic = getRobofleetMetadata(buf)?.topic() ?? null;
@@ -69,7 +70,7 @@ function handleBinaryMessage(wss: WebSocket.Server, sender: WebSocket, data: Web
     return;
   }
   
-  if (authorize({ip, topic, op: "send"})) {
+  if (authorize({ip, email: senderEmail, topic, op: "send"})) {
     // handle subscription messages
     if (subscriptions.handleMessageBuffer(sender, buf)) {
       return;
@@ -86,8 +87,9 @@ function handleBinaryMessage(wss: WebSocket.Server, sender: WebSocket, data: Web
       if (clientIp === undefined) {
         throw new Error("No IP recorded for client; wsIpMap in invalid state.");
       }
+      const clientEmail = wsEmailMap.get(client);
       
-      if (authorize({ip: clientIp, topic, op: "receive"})) {
+      if (authorize({ip: clientIp, email: clientEmail, topic, op: "receive"})) {
         if (subscriptions.isSubscribed(client, topic)) {
           client.send(data);
           console.log(`broadcasted ${topic} from ${ip} to ${clientIp}`);

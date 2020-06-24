@@ -6,13 +6,15 @@ export interface AuthConfig {
   permissions: Array<{
     ip?: string,
     ipRange?: [string, string],
+    email?: string,
     allow: Array<Op>,
   }>,
   [other: string]: any
 }
 
 export function makeAuthorizer(config: AuthConfig) {
-  return function authorize({ip, token, topic, op}: {ip?: string, token?: string, topic: string, op: Op}) {
+  return function authorize({ip, email, topic, op}: 
+      {ip?: string, email?: string, topic: string, op: Op}) {
     // TODO: handle topic
     
     // allow unauthorized clients to receive status messages
@@ -45,6 +47,13 @@ export function makeAuthorizer(config: AuthConfig) {
             if (grantIpRange.contains(ipAddr.toString())) {
               return true;
             }
+          }
+        }
+
+        // does the request include an email? Do email-based auth
+        if (email && grant.email) {
+          if (email === grant.email) {
+            return true;
           }
         }
       }
