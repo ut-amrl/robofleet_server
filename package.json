@@ -10,7 +10,7 @@
     "build": "tsc",
     "deploy": "yarn build && mkdir -p deploy && cp -R node_modules dist deploy",
     "start": "yarn build && node dist/index.js",
-    "test": "jest"
+    "test": "yarn build && jest"
   },
   "dependencies": {
     "@types/cors": "^2.8.6",
