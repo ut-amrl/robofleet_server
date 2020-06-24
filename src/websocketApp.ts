@@ -4,6 +4,7 @@ import config from "./config";
 import { getIp, getRobofleetMetadata, getByteBuffer } from "./util";
 import { SubscriptionManager } from "./subscriptions";
 import { OAuth2Client } from "google-auth-library"; 
+import { Socket } from "net";
 
 const authorize = makeAuthorizer(config);
 const subscriptions = new SubscriptionManager();
@@ -81,6 +82,11 @@ function handleBinaryMessage(wss: WebSocket.Server, sender: WebSocket, data: Web
       if (client === sender)
         continue;
       if (client.readyState !== WebSocket.OPEN)
+        continue;
+
+      // skip this client if we are waiting to write any data to it
+      const clientSock: Socket = (client as any)._socket;
+      if (clientSock.bufferSize > 0)
         continue;
       
       const clientIp = wsIpMap.get(client);
