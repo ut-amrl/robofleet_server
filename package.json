@@ -19,6 +19,7 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "flatbuffers": "^1.12.0",
+    "google-auth-library": "^6.0.2",
     "ip6addr": "^0.2.3",
     "ws": "^7.3.0"
   },

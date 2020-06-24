@@ -7,6 +7,8 @@ export default {
     useSecure: false,
     certPath: "example.pem",
     keyPath: "example.key",
+    // OAuth client ID
+    clientId: null,
     permissions: [
         // localhost
         {ip: "127.0.0.1", allow: ["send", "receive"]},

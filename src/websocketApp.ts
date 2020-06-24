@@ -3,11 +3,14 @@ import { makeAuthorizer } from "./access";
 import config from "./config";
 import { getIp, getRobofleetMetadata, getByteBuffer } from "./util";
 import { SubscriptionManager } from "./subscriptions";
+import { OAuth2Client } from "google-auth-library"; 
 
 const authorize = makeAuthorizer(config);
 const subscriptions = new SubscriptionManager();
 
 const wsIpMap = new Map<WebSocket, string>();
+
+const oauth2Client = typeof config.clientId === "string" ? new OAuth2Client(config.clientId) : null;
 const wsEmailMap = new Map<WebSocket, string>();
 
 export function setupWebsocketApp(wss: WebSocket.Server) {
@@ -94,6 +97,31 @@ function handleBinaryMessage(wss: WebSocket.Server, sender: WebSocket, data: Web
   }
 }
 
-function handleIdToken(sender: WebSocket, idToken: string) {
-  console.log(`Got ID token: ${idToken}`);
+async function handleIdToken(sender: WebSocket, idToken: string | null) {
+  if (oauth2Client === null)
+    return;
+
+  const ip = wsIpMap.get(sender) ?? "<unknown IP>";
+  
+  // Sign out
+  if (idToken === null) {
+    if (wsEmailMap.has(sender)) {
+      const oldEmail = wsEmailMap.get(sender);
+      wsEmailMap.delete(sender);
+      console.log(`De-authenticated a connection from ${ip} (was ${oldEmail})`);
+    }
+    return;
+  }
+  
+  // Authenticate
+  // https://developers.google.com/identity/sign-in/web/backend-auth#using-a-google-api-client-library
+  const ticket = await oauth2Client.verifyIdToken({
+    idToken,
+    audience: config.clientId as string
+  });
+  const payload = ticket.getPayload();
+  if (payload?.email && payload?.email_verified) {
+    wsEmailMap.set(sender, payload.email);
+    console.log(`Authenticated a connection from ${ip} as ${payload.email}`);
+  }
 }
