@@ -100,15 +100,15 @@ function handleBinaryMessage(wss: WebSocket.Server, sender: WebSocket, data: Web
       }
       const clientEmail = wsEmailMap.get(client);
       
-      if (authorize({ip: clientIp, email: clientEmail, topic, op: "receive"})) {
-        if (subscriptions.isSubscribed(client, topic)) {
+      if (subscriptions.isSubscribed(client, topic)) {
+        if (authorize({ip: clientIp, email: clientEmail, topic, op: "receive"})) {
           client.send(data);
           wsLoggers.get(sender)?.logOnce(`broadcasting "${topic}" to ${clientIp}`);
+        } else {
+          wsLoggers.get(client)?.logOnce(
+            `WARNING: client (${clientEmail ?? "not signed in"}) not authorized to receive "${topic}"`);
         }
-      } else {
-        wsLoggers.get(client)?.logOnce(
-          `WARNING: client (${clientEmail ?? "not signed in"}) not authorized to receive "${topic}"`);
-      }
+      } 
     }
   } else {
     wsLoggers.get(sender)?.logOnce(
