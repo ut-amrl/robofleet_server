@@ -2,6 +2,10 @@ import ip6addr from "ip6addr";
 
 export type Op = "send" | "receive";
 
+export function isOp(x: any): x is Op {
+  return (typeof x === "string") && (x === "send" || x === "receive");
+}
+
 export interface AuthConfig {
   permissions: Array<{
     ip?: string,

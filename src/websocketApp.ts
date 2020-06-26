@@ -3,15 +3,14 @@ import { makeAuthorizer } from "./access";
 import config from "./config";
 import { getIp, getRobofleetMetadata, getByteBuffer, Logger } from "./util";
 import { SubscriptionManager } from "./subscriptions";
-import { OAuth2Client } from "google-auth-library"; 
 import { Socket } from "net";
+import { googleAuthAvailable, getAuthPayload } from "./googleAuth";
 
 const authorize = makeAuthorizer(config);
 const subscriptions = new SubscriptionManager();
 
 const wsIpMap = new Map<WebSocket, string>();
 
-const oauth2Client = typeof config.clientId === "string" ? new OAuth2Client(config.clientId) : null;
 const wsEmailMap = new Map<WebSocket, string>();
 
 const wsLoggers = new Map<WebSocket, Logger>();
@@ -117,7 +116,7 @@ function handleBinaryMessage(wss: WebSocket.Server, sender: WebSocket, data: Web
 }
 
 async function handleIdToken(sender: WebSocket, idToken: string | null) {
-  if (oauth2Client === null)
+  if (!googleAuthAvailable)
     return;
 
   const ip = wsIpMap.get(sender) ?? "<unknown IP>";
@@ -133,12 +132,7 @@ async function handleIdToken(sender: WebSocket, idToken: string | null) {
   }
   
   // Authenticate
-  // https://developers.google.com/identity/sign-in/web/backend-auth#using-a-google-api-client-library
-  const ticket = await oauth2Client.verifyIdToken({
-    idToken,
-    audience: config.clientId as string
-  });
-  const payload = ticket.getPayload();
+  const payload = await getAuthPayload(idToken);
   if (payload?.email && payload?.email_verified) {
     wsEmailMap.set(sender, payload.email);
     console.log(`Authenticated a connection from ${ip} as ${payload.email}`);
