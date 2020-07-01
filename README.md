@@ -4,8 +4,8 @@
 
 ## Dependencies
 
-* Node.js
-* [yarn](https://classic.yarnpkg.com/en/docs/install)
+1. [Node.js 10.x+](https://nodejs.org/en/download/package-manager/)
+2. [yarn](https://classic.yarnpkg.com/en/docs/install)
 
 ## Configuration
 
