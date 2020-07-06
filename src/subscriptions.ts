@@ -39,7 +39,7 @@ export class SubscriptionManager {
    */
   handleMessageBuffer(sender: WebSocket, buf: flatbuffers.ByteBuffer) {
     const metadata = getRobofleetMetadata(buf);
-    if (metadata?.type() === "RobofleetSubscription") {
+    if (metadata?.type() === "amrl_msgs/RobofleetSubscription" || metadata?.type() === "RobofleetSubscription" ) {
       const msg = fb.amrl_msgs.RobofleetSubscription.getRootAsRobofleetSubscription(buf);
       const regex = msg.topicRegex() ?? "";
       const action = msg.action();
