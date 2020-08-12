@@ -77,7 +77,7 @@ function handleBinaryMessage(wss: WebSocket.Server, sender: WebSocket, data: Web
   
   if (authorize({ip, email: senderEmail, topic, op: "send"})) {
     // handle subscription messages
-    if (subscriptions.handleMessageBuffer(sender, buf)) {
+    if (subscriptions.handleMessageBuffer(sender, buf, ip, wsLoggers.get(sender))) {
       return;
     }
 

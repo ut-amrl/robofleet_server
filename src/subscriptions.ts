@@ -1,7 +1,7 @@
 import WebSocket from "ws";
 import {flatbuffers} from "flatbuffers";
 import { fb } from "./schema_generated";
-import { getRobofleetMetadata } from "./util";
+import { getRobofleetMetadata, Logger } from "./util";
 
 export const ACTION_SUBSCRIBE = fb.amrl_msgs.RobofleetSubscriptionConstants.action_subscribe.value;
 export const ACTION_UNSUBSCRIBE = fb.amrl_msgs.RobofleetSubscriptionConstants.action_unsubscribe.value;
@@ -9,15 +9,16 @@ export const ACTION_UNSUBSCRIBE = fb.amrl_msgs.RobofleetSubscriptionConstants.ac
 export class SubscriptionManager {
   subs: Map<WebSocket, Array<string>> = new Map();
   
-  private _handleSubscribe(sender: WebSocket, regex: string) {
+  private _handleSubscribe(sender: WebSocket, regex: string, clientIp: string, logger?: Logger) {
     if (!this.subs.has(sender)) {
       this.subs.set(sender, []);
     }
     // TODO: limit number of subscriptions?
     this.subs.get(sender)?.push(regex);
+    logger?.logOnce(`Client ${clientIp} has subscribed to "${regex}"`)
   }
 
-  private _handleUnsubscribe(sender: WebSocket, regex: string) {
+  private _handleUnsubscribe(sender: WebSocket, regex: string, clientIp: string, logger?: Logger) {
     const regexes = this.subs.get(sender);
     if (!regexes) {
       return;
@@ -27,6 +28,7 @@ export class SubscriptionManager {
       return;
     }
     regexes.splice(idx, 1);
+    logger?.logOnce(`Client ${clientIp} has unsubscribed from "${regex}"`)
   }
 
   /**
@@ -37,17 +39,17 @@ export class SubscriptionManager {
    * @param buf ByteBuffer containing the message data 
    * @returns whether the message was handled
    */
-  handleMessageBuffer(sender: WebSocket, buf: flatbuffers.ByteBuffer) {
+  handleMessageBuffer(sender: WebSocket, buf: flatbuffers.ByteBuffer, clientIp: string, logger?: Logger) {
     const metadata = getRobofleetMetadata(buf);
     if (metadata?.type() === "amrl_msgs/RobofleetSubscription" || metadata?.type() === "RobofleetSubscription" ) {
       const msg = fb.amrl_msgs.RobofleetSubscription.getRootAsRobofleetSubscription(buf);
       const regex = msg.topicRegex() ?? "";
       const action = msg.action();
       if (action === ACTION_SUBSCRIBE) {
-        this._handleSubscribe(sender, regex);
+        this._handleSubscribe(sender, regex, clientIp, logger);
       }
       else if (action === ACTION_UNSUBSCRIBE) {
-        this._handleUnsubscribe(sender, regex);
+        this._handleUnsubscribe(sender, regex, clientIp,  logger);
       }
       else {
         console.error(`WARNING: got invalid RobofleetSubscription action value: ${action}`);

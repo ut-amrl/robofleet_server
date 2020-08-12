@@ -31,7 +31,7 @@ test("Ignores a message with the type NotRobofleetSubscription", () => {
     topicRegex: "",
     action: ACTION_SUBSCRIBE
   });
-  expect(s.handleMessageBuffer(dummySocket, buf)).toBe(false);
+  expect(s.handleMessageBuffer(dummySocket, buf, "dummyIp")).toBe(false);
 });
 
 test("Handles a message with the type RobofleetSubscription", () => {
@@ -42,7 +42,7 @@ test("Handles a message with the type RobofleetSubscription", () => {
     topicRegex: "",
     action: ACTION_SUBSCRIBE
   });
-  expect(s.handleMessageBuffer(dummySocket, buf)).toBe(true);
+  expect(s.handleMessageBuffer(dummySocket, buf, "dummyIp")).toBe(true);
 });
 
 test("isSubscribed() returns true for a topic that matches the subscription", () => {
@@ -53,7 +53,7 @@ test("isSubscribed() returns true for a topic that matches the subscription", ()
     topicRegex: "test_[abc]",
     action: ACTION_SUBSCRIBE
   });
-  expect(s.handleMessageBuffer(dummySocket, buf)).toBe(true);
+  expect(s.handleMessageBuffer(dummySocket, buf, "dummyIp")).toBe(true);
   expect(s.isSubscribed(dummySocket, "test_b")).toBe(true);
 });
 
@@ -65,7 +65,7 @@ test("isSubscribed() returns false for a topic that does not match the subscript
     topicRegex: "test_[abc]",
     action: ACTION_SUBSCRIBE
   });
-  expect(s.handleMessageBuffer(dummySocket, buf)).toBe(true);
+  expect(s.handleMessageBuffer(dummySocket, buf, "dummyIp")).toBe(true);
   expect(s.isSubscribed(dummySocket, "test_d")).toBe(false);
 });
 
@@ -82,8 +82,8 @@ test("isSubscribed() is true after subscribing and false after unsubscribing", (
     topicRegex: "test_[abc]",
     action: ACTION_UNSUBSCRIBE
   });
-  expect(s.handleMessageBuffer(dummySocket, subBuf)).toBe(true);
+  expect(s.handleMessageBuffer(dummySocket, subBuf, "dummyIp")).toBe(true);
   expect(s.isSubscribed(dummySocket, "test_b")).toBe(true);
-  expect(s.handleMessageBuffer(dummySocket, unsubBuf)).toBe(true);
+  expect(s.handleMessageBuffer(dummySocket, unsubBuf, "dummyIp")).toBe(true);
   expect(s.isSubscribed(dummySocket, "test_b")).toBe(false);
 });
