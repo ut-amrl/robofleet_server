@@ -6,9 +6,23 @@ import config from "./config";
 import { googleAuthAvailable, getAuthPayload } from "./googleAuth";
 
 const authorize = makeAuthorizer(config);
+import { connect } from './database/database';
+
+import * as Mongoose from "mongoose";
 
 export function setupExpressApp(app: express.Application) {
   // use */ route to support base path
+  const database = connect(handleDbConnection, handleDbConnError);
+
+  async function handleDbConnection() {
+    // populate known clientNames
+    console.log("Express App: connected to database");
+  }
+  
+  function handleDbConnError() {
+    // idk, log stuff?
+    console.log("Express App: error connecting to database");
+  }
 
   app.use(cors());
 
@@ -41,4 +55,19 @@ export function setupExpressApp(app: express.Application) {
       }
     }
   });
+
+  app.get("/robots", async (req, res) => {
+    // to access this endpoint, you need to provide token auth
+    // let email = undefined;
+    // const token = req.body["id_token"];
+    // if (googleAuthAvailable && typeof token === "string") {
+    //   const payload = await getAuthPayload(token);
+    //   if (payload?.email_verified && payload.email)
+    //     email = payload.email;
+    // }
+
+    const staticRobotInformation = await database?.model("robot").find();
+    
+    res.status(200).send(staticRobotInformation?.map((robot) => robot.toJSON()));
+  })
 }
