@@ -71,6 +71,8 @@ export class StatusManager {
         robot.set('lastStatus', this.clientStatuses.get(ip));
       }
 
+      robot.set('lastUpdated', new Date().toString());
+
       await robot.save().catch((reason: any) => {
         this.logger?.log(`Error saving information for robot ({name, ip})`);
         this.logger?.log(reason.message);
