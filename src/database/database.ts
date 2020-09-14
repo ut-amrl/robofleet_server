@@ -2,12 +2,11 @@ import Mongoose = require('mongoose');
 let database: Mongoose.Connection;
 import { RobotModel } from "./robots/robots.model";
 import RobotSchema from './robots/robots.schema';
-
+import config from '../config'
 
 export const connect = (onConnect: () => void, onError: () => void) => {
-  // add your own uri below
-  const uri = "mongodb+srv://robofleet:dKXTHQhwSWk3Czao@robofleetstarter.irrcw.mongodb.net/<dbname>?retryWrites=true&w=majority";
-  
+  const uri = config.dbConnectString;
+  // add your own uri below  
   database = Mongoose.createConnection(uri, {
     useNewUrlParser: true,
     useFindAndModify: true,
