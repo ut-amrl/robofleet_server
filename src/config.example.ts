@@ -14,6 +14,8 @@ export default {
         {ip: "127.0.0.1", allow: ["send", "receive"]},
         {ip: "::1", allow: ["send", "receive"]},
 
+        {ipRange: ["10.0.0.100", "10.0.0.200"], allow: ["send", "receive"]},
+
         // allow all addresses to receive messages
         // {ipRange: ["0.0.0.0", "255.255.255.255"], allow: ["receive"]},
         // {ipRange: ["::", "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"], allow: ["receive"]},
