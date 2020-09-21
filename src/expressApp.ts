@@ -57,15 +57,6 @@ export function setupExpressApp(app: express.Application) {
   });
 
   app.get("/robots", async (req, res) => {
-    // to access this endpoint, you need to provide token auth
-    // let email = undefined;
-    // const token = req.body["id_token"];
-    // if (googleAuthAvailable && typeof token === "string") {
-    //   const payload = await getAuthPayload(token);
-    //   if (payload?.email_verified && payload.email)
-    //     email = payload.email;
-    // }
-
     const staticRobotInformation = await database?.model("robot").find();
     
     res.status(200).send(staticRobotInformation?.map((robot) => robot.toJSON()));
