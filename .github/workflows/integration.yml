@@ -1,0 +1,11 @@
+name: integration
+on: push
+jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - run: yarn install && cp src/config.example.ts src/config.ts && yarn test
