@@ -6,13 +6,11 @@ import config from "./config";
 import { googleAuthAvailable, getAuthPayload } from "./googleAuth";
 
 const authorize = makeAuthorizer(config);
-import { connect } from './database/database';
-
-import * as Mongoose from "mongoose";
+import { robotDb } from './database/database';
+import RobotInformation from './database/robot';
 
 export function setupExpressApp(app: express.Application) {
   // use */ route to support base path
-  const database = connect(handleDbConnection, handleDbConnError);
 
   async function handleDbConnection() {
     // populate known clientNames
@@ -57,8 +55,14 @@ export function setupExpressApp(app: express.Application) {
   });
 
   app.get("/robots", async (req, res) => {
-    const staticRobotInformation = await database?.model("robot").find();
+    const iterator = robotDb().iterator();
     
-    res.status(200).send(staticRobotInformation?.map((robot) => robot.toJSON()));
+    const staticRobotInformation = []
+
+    for await (const { key, value } of iterator) {
+      staticRobotInformation.push(value.toJSON());
+    }
+    
+    res.status(200).send(staticRobotInformation);
   })
 }
