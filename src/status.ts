@@ -2,33 +2,15 @@ import WebSocket from "ws";
 import {flatbuffers} from "flatbuffers";
 import { fb } from "./schema_generated";
 import { getRobofleetMetadata, Logger } from "./util";
-import { connect } from './database/database';
-import { IRobotModel } from "./database/robots/robots.types";
+import { robotDb } from './database/database';
 
-import * as Mongoose from "mongoose";
 import { strict } from "assert";
 import { stringify } from "querystring";
 import { ExecOptionsWithStringEncoding } from "child_process";
-
-class ClientInfo {
-  ip: string;
-  location: string;
-  name: string;
-  lastUpdated: string;
-  status: string;
-
-  constructor(ip: string, n: string, loc: string, s: string, lu: string) {
-    this.name = n;
-    this.ip = ip;
-    this.location = loc;
-    this.status = s;
-    this.lastUpdated = lu;
-  }
-}
+import RobotInformation from "./database/robot";
 
 export class StatusManager {
-  clientInformation: Map<string, ClientInfo> = new Map();// Map from clientIp to robot information; should always be up to date.
-  database?: Mongoose.Connection;
+  clientInformation: Map<string, RobotInformation> = new Map();// Map from clientIp to robot information; should always be up to date.
   static CLIENT_SAVE_INTERVAL:number = 10000; // Interval at which we persist current status info the db. 
   logger?: Logger;
   connected:boolean = false;
@@ -37,21 +19,21 @@ export class StatusManager {
     // set up DB connection, populate known clientNames
     log.logOnce("Initializing Status Manager....");
     this.connected = false;
-    this.database = connect(this.handleDbConnection.bind(this), this.handleDbConnError.bind(this));
     this.logger = log;
+    this.handleDbConnection();
   }
 
   async handleDbConnection() {
     // populate known clientNames
-    const robots = await this.database?.model("robot").find();
-    robots?.forEach((robot) => {
-      this.clientInformation.set(robot.get('ip'), new ClientInfo(robot.get('ip'), robot.get('name'), robot.get('location'), robot.get('status'), robot.get('lastUpdated')));
+    robotDb().createReadStream().on('data', (data) => {
+      this.clientInformation.set(data.key, RobotInformation.fromJSON(data.value));
+    }).on('close', () => {
+      this.logger?.log(`Connected to Database; loaded ${this.clientInformation.size} robot clients.\n`);
+  
+      // set up intermittent saves to the db for each robot
+      setInterval(this.saveClientInformation.bind(this), StatusManager.CLIENT_SAVE_INTERVAL);
+      this.connected = true;
     });
-    this.logger?.log(`Connected to Database; loaded ${this.clientInformation.size} robot clients.\n`);
-
-    // set up intermittent saves to the db for each robot
-    setInterval(this.saveClientInformation.bind(this), StatusManager.CLIENT_SAVE_INTERVAL);
-    this.connected = true;
   }
 
   handleDbConnError() {
@@ -72,29 +54,30 @@ export class StatusManager {
   async saveClientInformation() {
     // this.logger?.log("Persisting state to db...");
 
+    let batch = robotDb().batch();
     await Promise.all(Array.from(this.clientInformation).map(async ([ip, client], _) => {
-      let robotModel = <IRobotModel>this.database?.model("robot");
-      const robot = await robotModel.findOneOrCreate({
-        name: client.name,
-        ip
-      });
-
-      // Don't save if nothing has changed; in fact, let's delete this robot from our local tracking because it's offline now
-      if (client.lastUpdated == robot.lastUpdated.toString()) {
-        // this.logger?.log(`Clearing tracking for expired client (${client.ip}, ${client.name}).`);
-        // this.clientInformation.delete(client.ip);
-        return;
+      try {
+        let robot = RobotInformation.fromJSON((await robotDb().get(ip)).toString()) //this doesn't come out as the correct
+        // Don't save if nothing has changed; in fact, let's delete this robot from our local tracking because it's offline now
+        if (client.lastUpdated.toString() == robot.lastUpdated.toString()) {
+          // this.logger?.log(`Clearing tracking for expired client (${client.ip}, ${client.name}).`);
+          // this.clientInformation.delete(client.ip);
+          return;
+        }
+        robot.lastStatus = client.lastStatus;
+        robot.lastLocation = client.lastLocation;
+        robot.lastUpdated = client.lastUpdated;
+        
+        batch = batch.put(ip, robot.jsonString());
+      } catch (err) {
+        if (err.notFound) {
+          batch = batch.put(ip, client.jsonString());
+        } else {
+          throw err;
+        }
       }
-      
-      robot.set('lastLocation', client.location);
-      robot.set('lastStatus', client.status);
-      robot.set('lastUpdated', client.lastUpdated);
-
-      return await robot.save().catch((reason: any) => {
-        this.logger?.log(`Error saving information for robot ({name, ip})`);
-        this.logger?.log(reason.message);
-      });
     }));
+    return await batch.write();
   }
 
   private getNameFromTopic(topic: string) {
@@ -128,18 +111,18 @@ export class StatusManager {
       // If this is the first message from this IP
       if (!this.clientInformation.has(clientIp)) {
         this.logger?.log(`Tracking new client (${clientIp}, ${name})`);
-        this.clientInformation.set(clientIp, new ClientInfo(clientIp, name, msg.location()!, msg.status()!, new Date().toString()));
+        this.clientInformation.set(clientIp, new RobotInformation(clientIp, name, msg.location()!, msg.status()!, new Date()));
         return;
       } else {
         let clientInfo = this.clientInformation.get(clientIp)!;
         // Check if this name alread
         if (name !== clientInfo?.name) {
-          logger?.logOnce(`Recieved message from ${clientIp} with an unexpected name ${name}`);
+          logger?.logOnce(`Recieved message from ${clientIp} with an unexpected name ${name}. Expected: ${clientInfo?.name}`);
           return;
         }
-        clientInfo.status = msg.status()!;
-        clientInfo.location = msg.location()!;
-        clientInfo.lastUpdated = new Date().toString();
+        clientInfo.lastStatus = msg.status()!;
+        clientInfo.lastLocation = msg.location()!;
+        clientInfo.lastUpdated = new Date();
       }
     }
   }

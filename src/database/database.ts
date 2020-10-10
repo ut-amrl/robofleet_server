@@ -1,13 +1,12 @@
 import config from '../config'
-import LevelTypescript from 'level-ts';
-import Level from 'level';
+import levelup from 'levelup'
+import leveldown from 'leveldown'
 import RobotInformation from './robot';
 
-const robotDbInstance = Level('robofleet-robots');
-let robotDatabase = new LevelTypescript<RobotInformation>(robotDbInstance);
+var robotDbInstance = levelup(leveldown('robofleet-robots'));
 
 export function robotDb() {
-  return robotDatabase;
+  return robotDbInstance;
 }
 
 export const disconnect = () => {

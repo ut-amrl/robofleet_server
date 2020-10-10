@@ -55,14 +55,12 @@ export function setupExpressApp(app: express.Application) {
   });
 
   app.get("/robots", async (req, res) => {
-    const iterator = robotDb().iterator();
-    
-    const staticRobotInformation = []
+    const staticRobotInformation:any[] = [];
 
-    for await (const { key, value } of iterator) {
-      staticRobotInformation.push(value.toJSON());
-    }
-    
-    res.status(200).send(staticRobotInformation);
+    robotDb().createReadStream().on('data', (data) => {
+      staticRobotInformation.push(RobotInformation.fromJSON(data.value.toString()).json());
+    }).on('close', () => {
+      res.status(200).json(staticRobotInformation);
+    });
   })
 }
