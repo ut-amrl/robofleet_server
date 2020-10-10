@@ -1,27 +1,42 @@
 export default class RobotInformation {
-  name: string;
   ip: string;
+  name: string;
   lastLocation: string;
   lastStatus: string;
   lastUpdated: Date;
 
-  constructor(n: string, i: string, loc: string, stat: string, updated: Date) {
-    this.name = n;
+  constructor(i: string, n: string, loc: string, stat: string, updated: Date) {
     this.ip = i;
+    this.name = n;
     this.lastLocation = loc;
     this.lastStatus = stat;
     this.lastUpdated = updated;
   }
 
 
-  toJSON() {
+  jsonString() {
     return JSON.stringify({
-      name: this.name,
       ip: this.ip,
+      name: this.name,
       lastLocation: this.lastLocation,
       lastStatus: this.lastStatus,
       lastUpdated: this.lastUpdated.toString()
-    }, null, 2);
+    });
+  }
+
+  json() {
+    return {
+      ip: this.ip,
+      name: this.name,
+      lastLocation: this.lastLocation,
+      lastStatus: this.lastStatus,
+      lastUpdated: this.lastUpdated.toString()
+    };
+  }
+
+  static fromJSON(json: string) {
+    let obj = JSON.parse(json);
+    return new RobotInformation(obj.ip, obj.name, obj.lastLocation, obj.lastStatus, obj.lastUpdated);
   }
 
 }
