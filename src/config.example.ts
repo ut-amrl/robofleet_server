@@ -7,7 +7,6 @@ export default {
     useSecure: false,
     certPath: "example.pem",
     keyPath: "example.key",
-    dbConnectString: null,
     // OAuth client ID
     clientId: null,
     permissions: [
