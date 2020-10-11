@@ -6,6 +6,8 @@ import config from "./config";
 import { googleAuthAvailable, getAuthPayload } from "./googleAuth";
 
 const authorize = makeAuthorizer(config);
+import { robotDb } from './database/database';
+import RobotInformation from './database/robot';
 
 export function setupExpressApp(app: express.Application) {
   // use */ route to support base path
@@ -41,4 +43,14 @@ export function setupExpressApp(app: express.Application) {
       }
     }
   });
+
+  app.get("/robots", async (req, res) => {
+    const staticRobotInformation:any[] = [];
+
+    robotDb().createReadStream().on('data', (data) => {
+      staticRobotInformation.push(RobotInformation.fromJSON(data.value.toString()).json());
+    }).on('close', () => {
+      res.status(200).json(staticRobotInformation);
+    });
+  })
 }

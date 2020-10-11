@@ -5,9 +5,11 @@ import { getIp, getRobofleetMetadata, getByteBuffer, Logger } from "./util";
 import { SubscriptionManager } from "./subscriptions";
 import { Socket } from "net";
 import { googleAuthAvailable, getAuthPayload } from "./googleAuth";
+import { StatusManager } from "./status";
 
 const authorize = makeAuthorizer(config);
 const subscriptions = new SubscriptionManager();
+const statuses = new StatusManager(new Logger("StatusManager"));
 
 const wsIpMap = new Map<WebSocket, string>();
 
@@ -25,9 +27,16 @@ export function setupWebsocketApp(wss: WebSocket.Server) {
     wsIpMap.set(ws, ip);
     wsLoggers.set(ws, new Logger(ip));
     console.log(`New connection: ${ip}`);
+
+    statuses.handleNewConnection(ws, ip, wsLoggers.get(ws));
+
+    // check if this connection is from a robot
+    // If so, get the appropriate robot model from the db, update the last status info, start keeping track of it
+    // set up a timer to update the db with the latest of this stuff, since messages probably come in faster than we want to update the db
     
     ws.on("close", () => {
       wsIpMap.delete(ws);
+      wsEmailMap.delete(ws);
       wsLoggers.delete(ws);
       console.log(`Disconnected: ${ip}`);
     });
@@ -76,6 +85,9 @@ function handleBinaryMessage(wss: WebSocket.Server, sender: WebSocket, data: Web
   }
   
   if (authorize({ip, email: senderEmail, topic, op: "send"})) {
+    // handle robot status messages (update status map, for eventual db update)
+    statuses.handleMessageBuffer(sender, buf, ip, topic, wsLoggers.get(sender));
+
     // handle subscription messages
     if (subscriptions.handleMessageBuffer(sender, buf, ip, wsLoggers.get(sender))) {
       return;
@@ -98,7 +110,8 @@ function handleBinaryMessage(wss: WebSocket.Server, sender: WebSocket, data: Web
         throw new Error("No IP recorded for client; wsIpMap in invalid state.");
       }
       const clientEmail = wsEmailMap.get(client);
-      
+    
+      // Send out message to any subscribers
       if (subscriptions.isSubscribed(client, topic)) {
         if (authorize({ip: clientIp, email: clientEmail, topic, op: "receive"})) {
           client.send(data);
