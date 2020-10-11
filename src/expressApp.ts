@@ -12,16 +12,6 @@ import RobotInformation from './database/robot';
 export function setupExpressApp(app: express.Application) {
   // use */ route to support base path
 
-  async function handleDbConnection() {
-    // populate known clientNames
-    console.log("Express App: connected to database");
-  }
-  
-  function handleDbConnError() {
-    // idk, log stuff?
-    console.log("Express App: error connecting to database");
-  }
-
   app.use(cors());
 
   app.get("*/echo-ip", (req, res) => {
