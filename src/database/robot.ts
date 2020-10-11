@@ -15,13 +15,7 @@ export default class RobotInformation {
 
 
   jsonString() {
-    return JSON.stringify({
-      ip: this.ip,
-      name: this.name,
-      lastLocation: this.lastLocation,
-      lastStatus: this.lastStatus,
-      lastUpdated: this.lastUpdated.toString()
-    });
+    return JSON.stringify(this.json());
   }
 
   json() {
