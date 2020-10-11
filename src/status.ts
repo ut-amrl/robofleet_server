@@ -36,10 +36,6 @@ export class StatusManager {
     });
   }
 
-  handleDbConnError() {
-    // idk, log stuff?
-    this.logger?.log("Error connecting to database");
-  }
 
   handleNewConnection(sender: WebSocket, clientIp: string, logger?: Logger) {
     logger?.logOnce(`StatusManager got connection at ip ${clientIp}`);
