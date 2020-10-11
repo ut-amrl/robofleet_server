@@ -100,7 +100,7 @@ export class StatusManager {
     }
 
     const metadata = getRobofleetMetadata(buf);
-    if (metadata?.type() === "amrl_msgs/RobofleetStatus" || metadata?.type() === "RobofleetStatus" ) {
+    if (metadata?.type() === "amrl_msgs/RobofleetStatus") {
       const msg = fb.amrl_msgs.RobofleetStatus.getRootAsRobofleetStatus(buf);
       const name = this.getNameFromTopic(topic);
 
