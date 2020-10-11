@@ -22,6 +22,12 @@ export default {
 
         // grant full access to a particular email address
         // {email: "logan@example.org", allow: ["send", "receive"]},
+
+        // grant receive access for my/topic on a particular robot
+        // {email: "logan@example.org", allow: [{op: "receive", topicRegex: "/jackal/my/topic"}]},
+
+        // grant receive access for my/topic on any robot
+        // {email: "logan@example.org", allow: [{op: "receive", topicRegex: "/[^/]+/my/topic"}]},
     ],
 } as AuthConfig;
 

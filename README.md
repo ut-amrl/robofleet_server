@@ -32,7 +32,8 @@ Follow these steps to interact with a robot using the web visualizer:
     * Authorize each user to at least **receive** messages.
     * To allow robot control, allow the user to **send** messages.
 
-**Unstable**: Currently, there is no way to allow sending and receiving on a per-topic basis.
+In addition to allowing clients to send or receive all messages, you can allow clients to send or receive messages **on topics matching a given regular expression**.
+See the example configuration for details.
 
 #### Special topics
 
