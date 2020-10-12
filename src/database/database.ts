@@ -3,7 +3,7 @@ import levelup from 'levelup'
 import leveldown from 'leveldown'
 import RobotInformation from './robot';
 
-var robotDbInstance = levelup(leveldown('robofleet-robots'));
+var robotDbInstance = levelup(leveldown(config.robotDbPath));
 
 export function robotDb() {
   return robotDbInstance;
