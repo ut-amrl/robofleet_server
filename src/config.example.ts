@@ -9,6 +9,8 @@ export default {
     keyPath: "example.key",
     // OAuth client ID
     clientId: null,
+    // Path to the root folder for the robot db
+    robotDbPath: 'robofleet-robots', 
     permissions: [
         // full access to localhost
         {ip: "127.0.0.1", allow: ["send", "receive"]},
