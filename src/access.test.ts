@@ -211,3 +211,66 @@ test("Authorizes multiple kinds of identities", () => {
     op: "receive"
   })).toBe(true);
 });
+
+test("Authorizes matching topics when topicRegex is specified", () => {
+  const authorize = makeAuthorizer({
+    permissions: [
+      {
+        ip: "1.2.3.4",
+        allow: [{op: "receive", topicRegex: "my/t(opic|aco)"}],
+      }
+    ]
+  });
+
+  expect(authorize({
+    ip: "1.2.3.4",
+    op: "receive",
+    topic: "my/topic"
+  })).toBe(true);
+
+  expect(authorize({
+    ip: "1.2.3.4",
+    op: "receive",
+    topic: "my/taco"
+  })).toBe(true);
+});
+
+test("Doesn't authorize partially-matching topics when topicRegex is specified", () => {
+  const authorize = makeAuthorizer({
+    permissions: [
+      {
+        ip: "1.2.3.4",
+        allow: [{op: "receive", topicRegex: "topic"}],
+      }
+    ]
+  });
+
+  expect(authorize({
+    ip: "1.2.3.4",
+    op: "receive",
+    topic: "topic"
+  })).toBe(true);
+
+  expect(authorize({
+    ip: "1.2.3.4",
+    op: "receive",
+    topic: "my/topic"
+  })).toBe(false);
+});
+
+test("Doesn't authorize non-matching topics when topicRegex is specified", () => {
+  const authorize = makeAuthorizer({
+    permissions: [
+      {
+        ip: "1.2.3.4",
+        allow: [{op: "receive", topicRegex: "my/t(opic|aco)"}],
+      }
+    ]
+  });
+
+  expect(authorize({
+    ip: "1.2.3.4",
+    op: "receive",
+    topic: "my/tortoise"
+  })).toBe(false);
+});

@@ -2,7 +2,7 @@
 
 import { AuthConfig } from "./access";
 
-export default {
+const config: AuthConfig = {
     serverPort: 8080,
     useSecure: false,
     certPath: "example.pem",
@@ -24,6 +24,13 @@ export default {
 
         // grant full access to a particular email address
         // {email: "logan@example.org", allow: ["send", "receive"]},
-    ],
-} as AuthConfig;
 
+        // grant receive access for my/topic on a particular robot
+        // {email: "logan@example.org", allow: [{op: "receive", topicRegex: "/jackal/my/topic"}]},
+
+        // grant receive access for my/topic on any robot
+        // {email: "logan@example.org", allow: [{op: "receive", topicRegex: "/[^/]+/my/topic"}]},
+    ],
+};
+
+export default config;
