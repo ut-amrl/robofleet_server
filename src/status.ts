@@ -53,6 +53,7 @@ export class StatusManager {
     let batch = robotDb().batch();
     await Promise.all(Array.from(this.clientInformation).map(async ([ip, client], _) => {
       try {
+        console.log("Saving", ip, client)
         let robot = RobotInformation.fromJSON((await robotDb().get(ip)).toString()) //this doesn't come out as the correct
         // Don't save if nothing has changed; in fact, let's delete this robot from our local tracking because it's offline now
         if (client.lastUpdated.toString() == robot.lastUpdated.toString()) {

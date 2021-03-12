@@ -9,7 +9,6 @@ import { StatusManager } from "./status";
 
 const authorize = makeAuthorizer(config);
 const subscriptions = new SubscriptionManager();
-const statuses = new StatusManager(new Logger("StatusManager"));
 
 const wsIpMap = new Map<WebSocket, string>();
 
@@ -17,7 +16,7 @@ const wsEmailMap = new Map<WebSocket, string>();
 
 const wsLoggers = new Map<WebSocket, Logger>();
 
-export function setupWebsocketApp(wss: WebSocket.Server) {
+export function setupWebsocketApp(wss: WebSocket.Server, sm: StatusManager) {
   wss.on("connection", (ws, req) => {
     const ip = getIp(req);
     if (ip === undefined) {
@@ -27,8 +26,8 @@ export function setupWebsocketApp(wss: WebSocket.Server) {
     wsIpMap.set(ws, ip);
     wsLoggers.set(ws, new Logger(ip));
     console.log(`New connection: ${ip}`);
-
-    statuses.handleNewConnection(ws, ip, wsLoggers.get(ws));
+    
+    sm.handleNewConnection(ws, ip, wsLoggers.get(ws));
 
     // check if this connection is from a robot
     // If so, get the appropriate robot model from the db, update the last status info, start keeping track of it
@@ -43,9 +42,10 @@ export function setupWebsocketApp(wss: WebSocket.Server) {
 
     ws.on("message", (data) => {
       handleTextMessage(wss, ws, data);
-      handleBinaryMessage(wss, ws, data);
+      handleBinaryMessage(wss, sm, ws, data);
     });
   });
+
 }
 
 function handleTextMessage(wss: WebSocket.Server, sender: WebSocket, data: WebSocket.Data) {
@@ -65,7 +65,7 @@ function handleTextMessage(wss: WebSocket.Server, sender: WebSocket, data: WebSo
   }
 }
 
-function handleBinaryMessage(wss: WebSocket.Server, sender: WebSocket, data: WebSocket.Data) {
+function handleBinaryMessage(wss: WebSocket.Server, sm: StatusManager, sender: WebSocket, data: WebSocket.Data) {
   const buf = getByteBuffer(data);
   if (buf === null) {
     return;
@@ -86,7 +86,7 @@ function handleBinaryMessage(wss: WebSocket.Server, sender: WebSocket, data: Web
   
   if (authorize({ip, email: senderEmail, topic, op: "send"})) {
     // handle robot status messages (update status map, for eventual db update)
-    statuses.handleMessageBuffer(sender, buf, ip, topic, wsLoggers.get(sender));
+    sm.handleMessageBuffer(sender, buf, ip, topic, wsLoggers.get(sender));
 
     // handle subscription messages
     if (subscriptions.handleMessageBuffer(sender, buf, ip, wsLoggers.get(sender))) {
