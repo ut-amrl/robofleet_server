@@ -72,10 +72,12 @@ export function setupExpressApp(app: express.Application, sm: StatusManager) {
       return res.status(403).send();
     }
 
-    // TODO Figure out the ipv6/ipv4 hackery going on here. Need to do this on a deployed instance...
     if (ip == '::1') {
-      ip = '::ffff:127.0.0.1';
+      ip = ':127.0.0.1';
     }
+
+    // Since ips stored in the db are always ipv6 + ipv4... Need to resolve this at some point
+    ip = '::ffff' + ip;
 
     try {
       console.log('received request', authorized, ip!);
