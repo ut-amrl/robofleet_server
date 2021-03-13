@@ -72,19 +72,19 @@ export function setupExpressApp(app: express.Application, sm: StatusManager) {
       return res.status(403).send();
     }
 
-    if (ip == '::1') {
-      ip = ':127.0.0.1';
+    const name = sm.getNameFromTopic(req.body.name);
+    const clients = Array.from(sm.clientInformation.values()).filter((ci) => ci.name === name);
+
+    if (!clients.length) {
+      return res.status(404).send();
     }
 
-    // Since ips stored in the db are always ipv6 + ipv4... Need to resolve this at some point
-    ip = '::ffff' + ip;
-
     try {
-      console.log('received request', authorized, ip!);
-      await robotDb().del(ip!);
-      console.log(sm.clientInformation.keys());
-      sm.clientInformation.delete(ip!);
-      console.log('deleted');
+      for (const ci of clients) {
+        console.log("Removing robot information for: ", ci);
+        await robotDb().del(Buffer.from(ci.ip));
+        sm.clientInformation.delete(ci.ip);
+      }
       return res.status(204).send();
     } catch (e) {
       return res.status(400).send();
