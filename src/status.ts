@@ -26,7 +26,7 @@ export class StatusManager {
   async handleDbConnection() {
     // populate known clientNames
     robotDb().createReadStream().on('data', (data) => {
-      this.clientInformation.set(data.key, RobotInformation.fromJSON(data.value));
+      this.clientInformation.set(data.key.toString(), RobotInformation.fromJSON(data.value));
     }).on('close', () => {
       this.logger?.log(`Connected to Database; loaded ${this.clientInformation.size} robot clients.\n`);
   
@@ -64,10 +64,10 @@ export class StatusManager {
         robot.lastLocation = client.lastLocation;
         robot.lastUpdated = client.lastUpdated;
         
-        batch = batch.put(ip, robot.jsonString());
+        batch = batch.put(ip.toString(), robot.jsonString());
       } catch (err) {
         if (err.notFound) {
-          batch = batch.put(ip, client.jsonString());
+          batch = batch.put(ip.toString(), client.jsonString());
         } else {
           throw err;
         }
@@ -76,7 +76,7 @@ export class StatusManager {
     return await batch.write();
   }
 
-  private getNameFromTopic(topic: string) {
+  getNameFromTopic(topic: string) {
     // Absolute vs relative path
     if (topic.startsWith('/')) {
       return topic.split('/')[1];
@@ -105,12 +105,12 @@ export class StatusManager {
       const name = this.getNameFromTopic(topic);
 
       // If this is the first message from this IP
-      if (!this.clientInformation.has(clientIp)) {
+      if (!this.clientInformation.has(clientIp.toString())) {
         this.logger?.log(`Tracking new client (${clientIp}, ${name})`);
-        this.clientInformation.set(clientIp, new RobotInformation(clientIp, name, msg.location()!, msg.status()!, new Date()));
+        this.clientInformation.set(clientIp.toString(), new RobotInformation(clientIp, name, msg.location()!, msg.status()!, new Date()));
         return;
       } else {
-        let clientInfo = this.clientInformation.get(clientIp)!;
+        let clientInfo = this.clientInformation.get(clientIp.toString())!;
         // Check if this name alread
         if (name !== clientInfo?.name) {
           logger?.logOnce(`Recieved message from ${clientIp} with an unexpected name ${name}. Expected: ${clientInfo?.name}`);

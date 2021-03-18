@@ -4,8 +4,10 @@ import http from "http";
 import https from "https";
 import WebSocket from "ws";
 import config from "./config";
+import { StatusManager } from "./status";
 import { setupExpressApp } from "./expressApp";
 import { setupWebsocketApp } from "./websocketApp";
+import { Logger } from "./util";
 
 const app = express();
 
@@ -27,6 +29,7 @@ else {
     server: httpServer
   });
 }
+const sm = new StatusManager(new Logger("StatusManager"));
 
-setupWebsocketApp(wss);
-setupExpressApp(app);
+setupWebsocketApp(wss, sm);
+setupExpressApp(app, sm);
