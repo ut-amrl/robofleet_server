@@ -44,6 +44,8 @@ export function setupWebsocketApp(wss: WebSocket.Server, sm: StatusManager) {
       handleTextMessage(wss, ws, data);
       handleBinaryMessage(wss, sm, ws, data);
     });
+    
+    ws.on("error", console.error);
   });
 
 }
