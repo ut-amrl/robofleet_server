@@ -94,6 +94,8 @@ function handleBinaryMessage(wss: WebSocket.Server, sm: StatusManager, sender: W
     if (subscriptions.handleMessageBuffer(sender, buf, ip, wsLoggers.get(sender))) {
       return;
     }
+    
+    wsLoggers.get(sender)?.logOnce(`Received message on "${topic}" from ${ip}`);
 
     // broadcast any other messages
     for (let client of wss.clients) {
