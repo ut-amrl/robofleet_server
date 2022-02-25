@@ -94,6 +94,8 @@ function handleBinaryMessage(wss: WebSocket.Server, sm: StatusManager, sender: W
     if (subscriptions.handleMessageBuffer(sender, buf, ip, wsLoggers.get(sender))) {
       return;
     }
+    
+    wsLoggers.get(sender)?.logOnce(`Received message(s) on "${topic}" from ${ip}`);
 
     // broadcast any other messages
     for (let client of wss.clients) {
@@ -117,7 +119,7 @@ function handleBinaryMessage(wss: WebSocket.Server, sm: StatusManager, sender: W
       if (subscriptions.isSubscribed(client, topic)) {
         if (authorize({ip: clientIp, email: clientEmail, topic, op: "receive"})) {
           client.send(data);
-          wsLoggers.get(sender)?.logOnce(`broadcasting "${topic}" to ${clientIp}`);
+          wsLoggers.get(sender)?.logOnce(`broadcasting message(s) on topic "${topic}" to ${clientIp}`);
         } else {
           wsLoggers.get(client)?.logOnce(
             `WARNING: client (${clientEmail ?? "not signed in"}) not authorized to receive "${topic}"`);
